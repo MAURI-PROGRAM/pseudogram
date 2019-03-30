@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import firebase from 'firebase';
+
+import FileUpload from './FileUpload'
 import './App.css';
 
 class App extends Component {
@@ -8,8 +10,6 @@ class App extends Component {
     this.state={
       user:null
     };
-    this.handleAuth=this.handleAuth.bind(this);
-    this.handleLogout=this.handleLogout.bind(this);
   }
 
   componentWillMount(){
@@ -34,11 +34,12 @@ class App extends Component {
         <div>
           <img width="100" src={this.state.user.photoURL} alt={this.state.user.displayName} />
           <p>Hola {this.state.user.displayName}</p>
-          <button onClick={this.handleLogout}>Salir</button>
+          <button onClick={this.handleLogout.bind(this)}>Salir</button>
+          <FileUpload/>
         </div>
       )
     }else{
-      return (<button onClick={this.handleAuth}>Login con Google</button>)
+      return (<button onClick={this.handleAuth.bind(this)}>Login con Google</button>)
     }
   }
 
