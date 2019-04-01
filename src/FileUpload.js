@@ -18,12 +18,15 @@ class FileUpload extends Component{
             this.setState({
                 uploadValue:percentage
             })
-        },error=>{console.log(error.message)},()=>{
-            this.setState({
+        },error=>{console.log(error.message)},async ()=>{
+            var imagen;
+            await task.snapshot.ref.getDownloadURL().then( downloadURL=> {
+                imagen= downloadURL; 
+              });
+              this.setState({
                 uploadValue:100,
-                picture:task.snapshot.downloadURL
-            });
-            console.log(this.state.picture)
+                picture: imagen
+                });
         });
     }
     render(){
