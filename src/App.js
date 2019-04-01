@@ -8,7 +8,8 @@ class App extends Component {
   constructor(){
     super();
     this.state={
-      user:null
+      user:null,
+      pictures:[]
     };
   }
 
@@ -16,6 +17,11 @@ class App extends Component {
     firebase.auth().onAuthStateChanged(user=>{
       this.setState({
         user
+      })
+    });
+    firebase.database().ref('pictures').on('child_added',snapshot=>{
+      this.setState({
+        pictures:this.state.pictures.concat(snapshot.val())
       })
     })
   }
@@ -28,6 +34,30 @@ class App extends Component {
     firebase.auth().signOut().then(result=>console.log(`${result.user.email} ha salido`)).catch(error=> console.log(`Error ${error.code}:${error.message}`));
   }
 
+  handleUpload(event){
+    const file = event.target.files[0];
+    const storageRef = firebase.storage().ref(`/fotos/${file.name}`);
+    const task = storageRef.put(file);
+    task.on('state_changed',snapshot =>{
+        let percentage=(snapshot.bytesTransferred/snapshot.totalBytes*100);
+        this.setState({
+            uploadValue:percentage
+        })
+    },error=>{console.log(error.message)},async ()=>{
+        var imagen;
+        await task.snapshot.ref.getDownloadURL().then( downloadURL=> {
+            imagen= downloadURL; 
+          });
+        const record ={
+          photoURL: this.state.user.photoURL,
+          displayName:this.state.user.displayName,
+          image:imagen
+        };
+        const dbRef = firebase.database().ref('pictures');
+        const newPictures = dbRef.push();
+        newPictures.set(record);
+    });
+}
   renderLoginButton(){
     if(this.state.user){
       return (
@@ -35,7 +65,22 @@ class App extends Component {
           <img width="100" src={this.state.user.photoURL} alt={this.state.user.displayName} />
           <p>Hola {this.state.user.displayName}</p>
           <button onClick={this.handleLogout.bind(this)}>Salir</button>
-          <FileUpload/>
+
+
+          <FileUpload onUpload={this.handleUpload.bind(this)}/>
+
+          {
+            this.state.pictures.map(picture=>(
+            <div>
+              <img  src = {picture.image} alt="mix"/>
+              <br/>
+              <img src={picture.photoURL} alt={picture.displayName}/>
+              <br/>
+              <span>{picture.displayName}</span>
+            </div>
+            )).reverse()
+          }
+
         </div>
       )
     }else{
